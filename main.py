@@ -14,6 +14,7 @@ import spreedly
 import keymaster
 import base64
 import sys
+import hashlib
 
 ORG_NAME = 'Hacker Dojo'
 APP_NAME = 'hd-signup'
@@ -176,7 +177,13 @@ class Membership(db.Model):
         return str(url)
 
     def unsubscribe_url(self):
-        return "http://signup.hackerdojo.com/unsubscribe/%i" % (self.key().id())
+        url  = "http://signup.hackerdojo.com/unsubscribe/%i" % (self.key().id())
+        url += "?verify=%s" % get_action_hash('unsubscribe')
+        return url
+
+    def get_action_hash(self, action):
+        hash_stuff = self.created().strftime("%A%d%B%Y%I%M%p") + self.username() + action
+        return hashlib.sha224(hash_stuff).hexdigest()
     
     @classmethod
     def get_by_email(cls, email):
@@ -445,6 +452,8 @@ class UnsubscribeHandler(webapp.RequestHandler):
 
     def post(self,id):
         member = Membership.get_by_id(int(id))
+        if (member.get_action_hash('unsubscribe')!==self.request.get('verify'))
+            self.response.out.write("error: verification code doesn't match.")
         if member:
             unsubscribe_reason = self.request.get('unsubscribe_reason')
             if unsubscribe_reason:
