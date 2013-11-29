@@ -452,7 +452,7 @@ class UnsubscribeHandler(webapp.RequestHandler):
 
     def post(self,id):
         member = Membership.get_by_id(int(id))
-        if (member.get_action_hash('unsubscribe')!==self.request.get('verify'))
+        if (member.get_action_hash('unsubscribe')!=self.request.get('verify'))
             self.response.out.write("error: verification code doesn't match.")
         if member:
             unsubscribe_reason = self.request.get('unsubscribe_reason')
